@@ -48,8 +48,7 @@ RUN case "${TARGETARCH}" in \
         *) echo "Unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
     esac \
     && npm install -g "bare-runtime-${platform}@${BARE_VERSION}" \
-    && npm cache clean --force \
-    && bare --version
+    && npm cache clean --force
 
 # Node.js variant: docker build --target node .
 FROM ${NODE_IMAGE} AS node
