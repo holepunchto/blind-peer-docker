@@ -24,7 +24,8 @@ On Kubernetes, set `hostNetwork: true` on the pod spec.
 
 ## Variants
 
-Both variants are built from the same release tag and lockfile.
+Both variants are built from the same release tag and lockfile, for `linux/amd64`
+and `linux/arm64`.
 
 | Variant        | Runtime | Release tag                     | Promoted tags                                                                    | Build                          |
 | -------------- | ------- | ------------------------------- | -------------------------------------------------------------------------------- | ------------------------------ |
@@ -43,25 +44,3 @@ with `/home/blind-peer/docker-entrypoint.sh readiness-probe`.
 Set `BLIND_PEER_ARGS_FILE` to a file with one or more arguments per line, e.g. a
 mounted Kubernetes Secret, to keep secrets and config out of the command line.
 Arguments after the image name are appended after the file's.
-
-## Contributing
-
-### Releasing
-
-Images are built only from `vX.Y.Z-rN` tags, where `X.Y.Z` is the blind-peer-cli
-version in `package.json` and `N` is the image revision (bump it to rebuild the same
-version, e.g. for base image updates).
-
-```sh
-git tag v1.15.1-r1
-git push origin v1.15.1-r1
-```
-
-`publish.yml` builds and smoke tests both variants, then pushes `v1.15.1-r1-bare`,
-`v1.15.1-r1` and `v1.15.1-r1-node`.
-
-### Promoting
-
-Once verified, run the `promote.yml` workflow (Actions → Promote Docker image) with
-the release tag. It retags the existing images (same digest) with the promoted tags
-listed under [Variants](#variants). Promoting an older release rolls the tags back.
