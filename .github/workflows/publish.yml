@@ -13,8 +13,6 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    environment:
-      name: npm # Reusing existing npm environment to trigger the review gate
     strategy:
       matrix:
         target: [bare, node]
