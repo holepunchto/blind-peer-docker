@@ -13,31 +13,34 @@ blind peer binds its DHT port directly on the host instead of behind Docker's NA
 docker run -d --name blind-peer \
   --network host \
   -v blind-peer-store:/home/blind-peer/store \
-  ghcr.io/holepunchto/blind-peer-docker:v1 \
-  --port 49737
+  ghcr.io/holepunchto/blind-peer-docker:v1
 ```
 
 Extra CLI arguments are passed after the image name. Storage lives in the
 `/home/blind-peer/store` volume.
-
-On Kubernetes, set `hostNetwork: true` on the pod spec.
 
 ## Variants
 
 Both variants are built from the same release tag and lockfile, for `linux/amd64`
 and `linux/arm64`.
 
-| Variant        | Runtime | Release tag                     | Promoted tags                                                                    | Build                          |
-| -------------- | ------- | ------------------------------- | -------------------------------------------------------------------------------- | ------------------------------ |
+| Variant        | Runtime | Release tag                     | Promoted tags                                                                              | Build                          |
+| -------------- | ------- | ------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------ |
 | bare (default) | Bare    | `v1.15.1-r1-bare`, `v1.15.1-r1` | `v1-bare`, `v1.15-bare`, `v1.15.1-bare`, `latest-bare`, `v1`, `v1.15`, `v1.15.1`, `latest` | `docker build .`               |
-| node           | Node.js | `v1.15.1-r1-node`               | `v1-node`, `v1.15-node`, `v1.15.1-node`, `latest-node`                           | `docker build --target node .` |
+| node           | Node.js | `v1.15.1-r1-node`               | `v1-node`, `v1.15-node`, `v1.15.1-node`, `latest-node`                                     | `docker build --target node .` |
 
 ## Advanced usage
 
 ### Health checks
 
-Readiness is checked over the control socket (`/home/blind-peer/.blind-peer.sock`)
-with `/home/blind-peer/docker-entrypoint.sh readiness-probe`.
+The image defines a Docker `HEALTHCHECK`, so `docker ps` and `docker inspect` report the
+container as `starting`, then `healthy` once the blind peer is listening on the DHT,
+or `unhealthy` if the check keeps failing. The check runs
+`/home/blind-peer/docker-entrypoint.sh readiness-probe`, which queries the peer over its
+control socket (`/home/blind-peer/.blind-peer.sock`).
+
+Use the same command for Compose `healthcheck`, or as a Kubernetes readiness probe
+(`exec` probe), since Kubernetes ignores the image `HEALTHCHECK`.
 
 ### Arguments file
 
