@@ -1,0 +1,12 @@
+{
+  "name": "blind-peer-service",
+  "version": "1.15.1",
+  "description": "Docker image for blind-peer",
+  "private": true,
+  "scripts": {
+    "start": "./docker-entrypoint.sh"
+  },
+  "dependencies": {
+    "blind-peer-cli": "^1.15.1"
+  }
+}
