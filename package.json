@@ -1,6 +1,6 @@
 {
   "name": "blind-peer-service",
-  "version": "1.15.1-r2",
+  "version": "1.15.1-r3",
   "description": "Docker image for blind-peer",
   "private": true,
   "scripts": {
