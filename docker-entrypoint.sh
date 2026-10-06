@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-case "${BLIND_PEER_RUNTIME:-bare}" in
-  bare) cmd=(bare ./node_modules/.bin/blind-peer-bare) ;;
-  node) cmd=(node ./node_modules/.bin/blind-peer) ;;
-  *) echo "Unsupported BLIND_PEER_RUNTIME: ${BLIND_PEER_RUNTIME}" >&2; exit 1 ;;
-esac
+cmd=(bare ./node_modules/.bin/blind-peer-bare)
 
 control_args=(
   --control-socket /home/blind-peer/.blind-peer.sock

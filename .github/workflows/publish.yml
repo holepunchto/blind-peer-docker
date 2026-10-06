@@ -5,7 +5,7 @@ on:
     tags: ["v[0-9]+.[0-9]+.[0-9]+-r[0-9]+"]
 
 jobs:
-  # Push each variant untagged (by digest only); it is tagged after the smoke test passes.
+  # Push the image untagged (by digest only); it is tagged after the smoke test passes.
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -13,12 +13,8 @@ jobs:
       packages: write
       id-token: write
       attestations: write
-    strategy:
-      matrix:
-        target: [bare, node]
     outputs:
-      digest-bare: ${{ steps.digest.outputs.digest-bare }}
-      digest-node: ${{ steps.digest.outputs.digest-node }}
+      digest: ${{ steps.push.outputs.digest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
@@ -39,7 +35,6 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
-          target: ${{ matrix.target }}
           platforms: linux/amd64,linux/arm64
           outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
@@ -51,14 +46,8 @@ jobs:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
-      - name: Export digest
-        id: digest
-        env:
-          TARGET: ${{ matrix.target }}
-          DIGEST: ${{ steps.push.outputs.digest }}
-        run: echo "digest-${TARGET}=${DIGEST}" >> "$GITHUB_OUTPUT"
 
-  # Boot each untagged image as a service on each architecture natively; the runner
+  # Boot the untagged image as a service on each architecture natively; the runner
   # waits for --health-cmd (the blind-peer readiness probe) before running steps.
   smoke-test:
     needs: build
@@ -69,10 +58,9 @@ jobs:
     strategy:
       matrix:
         runner: [ubuntu-latest, ubuntu-24.04-arm]
-        target: [bare, node]
     services:
       blind-peer:
-        image: ghcr.io/${{ github.repository }}@${{ needs.build.outputs[format('digest-{0}', matrix.target)] }}
+        image: ghcr.io/${{ github.repository }}@${{ needs.build.outputs.digest }}
         credentials:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -85,8 +73,7 @@ jobs:
       - name: Show logs
         run: docker logs "${{ job.services.blind-peer.id }}"
 
-  # Only tested digests get the release tags: v1.1.1-r1-bare and v1.1.1-r1 (default),
-  # and v1.1.1-r1-node.
+  # Only a tested digest gets the release tag, e.g. v1.1.1-r1.
   release:
     needs: [build, smoke-test]
     runs-on: ubuntu-latest
@@ -101,12 +88,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }} # Doesn't actually matter what we set this to, but required to be set
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Tag v1.1.1-r1-bare, v1.1.1-r1 and v1.1.1-r1-node
+      - name: Tag v1.1.1-r1
         env:
           IMAGE: ghcr.io/${{ github.repository }}
           TAG: ${{ github.ref_name }}
-          DIGEST_BARE: ${{ needs.build.outputs.digest-bare }}
-          DIGEST_NODE: ${{ needs.build.outputs.digest-node }}
-        run: |
-          docker buildx imagetools create -t "$IMAGE:$TAG-bare" -t "$IMAGE:$TAG" "$IMAGE@$DIGEST_BARE"
-          docker buildx imagetools create -t "$IMAGE:$TAG-node" "$IMAGE@$DIGEST_NODE"
+          DIGEST: ${{ needs.build.outputs.digest }}
+        run: docker buildx imagetools create -t "$IMAGE:$TAG" "$IMAGE@$DIGEST"

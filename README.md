@@ -19,15 +19,14 @@ docker run -d --name blind-peer \
 Extra CLI arguments are passed after the image name. Storage lives in the
 `/home/blind-peer/store` volume.
 
-## Variants
+## Tags
 
-Both variants are built from the same release tag and lockfile, for `linux/amd64`
-and `linux/arm64`.
+The image is built for `linux/amd64` and `linux/arm64` and runs blind-peer on
+[Bare](https://github.com/holepunchto/bare).
 
-| Variant        | Runtime | Release tag                     | Promoted tags                                                                              | Build                          |
-| -------------- | ------- | ------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------ |
-| bare (default) | Bare    | `v1.15.1-r1-bare`, `v1.15.1-r1` | `v1-bare`, `v1.15-bare`, `v1.15.1-bare`, `latest-bare`, `v1`, `v1.15`, `v1.15.1`, `latest` | `docker build .`               |
-| node           | Node.js | `v1.15.1-r1-node`               | `v1-node`, `v1.15-node`, `v1.15.1-node`, `latest-node`                                     | `docker build --target node .` |
+| Release tag  | Promoted tags                      | Build            |
+| ------------ | ---------------------------------- | ---------------- |
+| `v1.15.1-r1` | `v1`, `v1.15`, `v1.15.1`, `latest` | `docker build .` |
 
 ## Advanced usage
 

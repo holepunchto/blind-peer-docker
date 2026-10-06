@@ -22,7 +22,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }} # Doesn't actually matter what we set this to, but required to be set
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Retag v1.1.1-r1-bare as v1, v1.1, v1.1.1, latest, v1-bare, v1.1-bare, v1.1.1-bare and latest-bare
+      - name: Retag v1.1.1-r1 as v1, v1.1, v1.1.1 and latest
         env:
           IMAGE: ghcr.io/${{ github.repository }}
           TAG: ${{ inputs.tag }}
@@ -33,20 +33,4 @@ jobs:
             -t "$IMAGE:${version%.*}" \
             -t "$IMAGE:$version" \
             -t "$IMAGE:latest" \
-            -t "$IMAGE:${version%%.*}-bare" \
-            -t "$IMAGE:${version%.*}-bare" \
-            -t "$IMAGE:$version-bare" \
-            -t "$IMAGE:latest-bare" \
-            "$IMAGE:$TAG-bare"
-      - name: Retag v1.1.1-r1-node as v1-node, v1.1-node, v1.1.1-node and latest-node
-        env:
-          IMAGE: ghcr.io/${{ github.repository }}
-          TAG: ${{ inputs.tag }}
-        run: |
-          version="${TAG%-r*}"
-          docker buildx imagetools create \
-            -t "$IMAGE:${version%%.*}-node" \
-            -t "$IMAGE:${version%.*}-node" \
-            -t "$IMAGE:$version-node" \
-            -t "$IMAGE:latest-node" \
-            "$IMAGE:$TAG-node"
+            "$IMAGE:$TAG"
