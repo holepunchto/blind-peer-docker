@@ -1,8 +1,8 @@
 # blind-peer-docker
 
 Docker image for [blind-peer-cli](https://github.com/holepunchto/blind-peer-cli),
-published to `ghcr.io/holepunchto/blind-peer-docker`. See the blind-peer-cli README
-for the available CLI arguments.
+published to [`tetherto/blind-peer`](https://hub.docker.com/r/tetherto/blind-peer)
+on Docker Hub. See the blind-peer-cli README for the available CLI arguments.
 
 ## Running
 
@@ -13,7 +13,7 @@ blind peer binds its DHT port directly on the host instead of behind Docker's NA
 docker run -d --name blind-peer \
   --network host \
   -v blind-peer-store:/home/blind-peer/store \
-  ghcr.io/holepunchto/blind-peer-docker:v1
+  tetherto/blind-peer:v1
 ```
 
 Extra CLI arguments are passed after the image name. Storage lives in the

@@ -8,23 +8,25 @@ on:
         required: true
         type: string
 
+env:
+  IMAGE: docker.io/tetherto/blind-peer
+
 jobs:
   promote:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      id-token: write
     steps:
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - name: Log in to GHCR
+      - name: Log in to Docker Hub (OIDC)
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }} # Doesn't actually matter what we set this to, but required to be set
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: tetherto
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ secrets.DOCKERHUB_OIDC_CONNECTIONID }}
       - name: Retag v1.1.1-r1 as v1, v1.1, v1.1.1 and latest
         env:
-          IMAGE: ghcr.io/${{ github.repository }}
           TAG: ${{ inputs.tag }}
         run: |
           version="${TAG%-r*}"

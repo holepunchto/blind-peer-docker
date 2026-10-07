@@ -4,13 +4,15 @@ on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+-r[0-9]+"]
 
+env:
+  IMAGE: docker.io/tetherto/blind-peer
+
 jobs:
   # Push the image untagged (by digest only); it is tagged after the smoke test passes.
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
       id-token: write
       attestations: write
     outputs:
@@ -19,51 +21,49 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - name: Log in to GHCR
+      - name: Log in to Docker Hub (OIDC)
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }} # Doesn't actually matter what we set this to, but required to be set
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: tetherto
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ secrets.DOCKERHUB_OIDC_CONNECTIONID }}
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ env.IMAGE }}
       - name: Build and push by digest
         id: push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           provenance: mode=max
           sbom: true
       - name: Attest build provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-name: ghcr.io/${{ github.repository }}
+          subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
   # Boot the untagged image as a service on each architecture natively; the runner
   # waits for --health-cmd (the blind-peer readiness probe) before running steps.
+  # The repository is public, so pulling by digest needs no credentials.
+  # The env context is not available for services, so the image name is repeated here.
   smoke-test:
     needs: build
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
-      packages: read
     strategy:
       matrix:
         runner: [ubuntu-latest, ubuntu-24.04-arm]
     services:
       blind-peer:
-        image: ghcr.io/${{ github.repository }}@${{ needs.build.outputs.digest }}
-        credentials:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+        image: docker.io/tetherto/blind-peer@${{ needs.build.outputs.digest }}
         options: >-
           --health-cmd "/home/blind-peer/docker-entrypoint.sh readiness-probe"
           --health-interval 2s
@@ -79,18 +79,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+      id-token: write
     steps:
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - name: Log in to GHCR
+      - name: Log in to Docker Hub (OIDC)
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }} # Doesn't actually matter what we set this to, but required to be set
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: tetherto
+        env:
+          DOCKERHUB_OIDC_CONNECTIONID: ${{ secrets.DOCKERHUB_OIDC_CONNECTIONID }}
       - name: Tag v1.1.1-r1
         env:
-          IMAGE: ghcr.io/${{ github.repository }}
           TAG: ${{ github.ref_name }}
           DIGEST: ${{ needs.build.outputs.digest }}
         run: docker buildx imagetools create -t "$IMAGE:$TAG" "$IMAGE@$DIGEST"
