@@ -15,6 +15,8 @@ jobs:
       contents: read
       id-token: write
       attestations: write
+    environment:
+      name: npm # Reusing existing npm environment to trigger the review gate
     outputs:
       digest: ${{ steps.push.outputs.digest }}
     steps:
