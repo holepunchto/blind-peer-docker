@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
 
 # Node.js image for installing dependencies and the Bare runtime.
-ARG NODE_IMAGE=node:24.20.0-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e
+ARG NODE_IMAGE=node:24.22.3-slim@sha256:873f586f3794f52281bd039bf02c048a0be08fde619338f9941bad1eb6b34530
 # Base image for the final image.
-ARG BASE_IMAGE=debian:bookworm-slim@sha256:88200866dfff7ea7f5cbcb6ec7c8a701889efe6fe859fe64d6990e4b07ea4171
+ARG BASE_IMAGE=debian:bookworm-slim@sha256:e67eeead736ff7bbe258ef088bff683635c561b1fcfefad0806c1df4ab49ce0e
 # Version of the bare-runtime-linux-<arch> package.
-ARG BARE_VERSION=1.34.1
+ARG BARE_VERSION=1.38.0
 # Set automatically by buildx (amd64, arm64).
 ARG TARGETARCH
 
